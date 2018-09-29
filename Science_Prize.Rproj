@@ -1,13 +1,35 @@
-Version: 1.0
+#Installing Packages
+install.packages("ggplot2")
+install.packages("cowplot")
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+#Loading Royal Society Science Prize Data
+sci = read.csv("C:/Users/User/Desktop/SciStats.csv", header = FALSE)
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+#Adding Column Names
+colnames(sci) <- c("Score","Woman","Winner")
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+head(sci)
+
+#Changing Variables to Factors
+sci$Woman <- as.factor(sci$Woman)
+sci$Winner <- as.factor(sci$Winner)
+
+#Creating Logistic Regression
+logistic <- glm(Winner ~ ., data=sci, family="binomial")
+summary(logistic)
+
+#Creating Data Frame
+predicted.sci <- data.frame(probability.of.Winner=logistic$fitted.values,Winner=sci$Winner)
+predicted.sci <- predicted.sci[order(predicted.sci$probability.of.Winner, decreasing = FALSE),]
+predicted.sci$rank <- 1:nrow(predicted.sci)
+
+#Plotting Logistic Regression
+library(ggplot2)
+library(cowplot)
+ggplot(data=predicted.sci, aes(x=rank, y=probability.of.Winner)) + 
+  geom_point(aes(color=Winner), alpha=1, shape=4, stroke=2) + 
+  xlab("Index") + 
+  ylab("Predicted probability of Winning")
+
+#Saving PDF
+ggsave("win_probabilities.pdf")
